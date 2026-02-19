@@ -23,7 +23,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const isMockApi = true;
+
+  const mockUser: User = {
+    id: 999,
+    email: 'dev@linguaflow.ai',
+    name: 'Developer',
+    credits: 1000,
+    api_key: 'mock-api-key-for-dev',
+  };
+
   const refreshUser = async () => {
+    if (isMockApi) {
+      setUser(mockUser);
+      setIsLoading(false);
+      return;
+    }
     try {
       const res = await fetch('/api/user/me');
       if (res.ok) {
@@ -48,17 +63,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const mockLogin = () => {
-    const mockUser: User = {
-      id: 999,
-      email: 'dev@linguaflow.ai',
-      name: 'Developer',
-      credits: 1000,
-      api_key: 'mock-api-key-for-dev',
-    };
     setUser(mockUser);
   };
 
   const logout = async () => {
+    if (isMockApi) {
+      setUser(null);
+      window.location.href = '/';
+      return;
+    }
     await fetch('/api/auth/logout', { method: 'POST' });
     setUser(null);
     window.location.href = '/';

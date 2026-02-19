@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import cookieParser from 'cookie-parser';
 import multer from 'multer';
 import fs from 'fs';
-import { GoogleGenAI } from "@google/genai";
+// import { GoogleGenAI } from "@google/genai"; // Mocking AI, so we don't need this
 import db from './db.ts';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -16,13 +16,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key-change-in-prod';
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+// const GEMINI_API_KEY = process.env.GEMINI_API_KEY; // Mocking
 
-if (!GEMINI_API_KEY) {
-  console.warn("GEMINI_API_KEY is missing!");
-}
+// if (!GEMINI_API_KEY) {
+//   console.warn("GEMINI_API_KEY is missing!");
+// }
 
-const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+// const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY }); // Mocking
 
 // Seed default user
 const seedDatabase = async () => {
@@ -154,105 +154,22 @@ async function startServer() {
     return true;
   };
 
-  // Docx Translation Endpoint
-  app.post('/api/translate/docx', upload.single('file'), async (req: any, res) => {
-    const isGuest = !req.user; // If called from public endpoint without auth middleware (we'll handle routing below)
-    const targetLang = req.body.targetLang || 'English';
-    
-    // Check credits if logged in
-    if (!isGuest) {
-      if (!deductCredits(req.user.id, 5)) {
-        return res.status(402).json({ error: 'Insufficient credits' });
-      }
-    }
-
-    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-
-    try {
-      const result = await mammoth.extractRawText({ buffer: req.file.buffer });
-      const text = result.value;
-
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: `Translate the following text to ${targetLang}. Maintain the original structure as much as possible.\n\n${text}`,
-      });
-
-      res.json({ 
-        original: text,
-        translated: response.text 
-      });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Translation failed' });
-    }
-  });
-
-  // ASR Endpoint
-  app.post('/api/translate/asr', upload.single('audio'), async (req: any, res) => {
-    const isGuest = !req.user;
-    const targetLang = req.body.targetLang || 'English';
-
-    if (!isGuest) {
-      if (!deductCredits(req.user.id, 10)) {
-        return res.status(402).json({ error: 'Insufficient credits' });
-      }
-    }
-
-    if (!req.file) return res.status(400).json({ error: 'No audio uploaded' });
-
-    try {
-      const base64Audio = req.file.buffer.toString('base64');
-      
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash-native-audio-preview-09-2025",
-        contents: {
-          parts: [
-            {
-              inlineData: {
-                mimeType: req.file.mimetype, // e.g., 'audio/webm' or 'audio/mp3'
-                data: base64Audio
-              }
-            },
-            {
-              text: `Transcribe this audio and then translate it to ${targetLang}. Return the result in JSON format with "transcription" and "translation" fields.`
-            }
-          ]
-        },
-        config: {
-            responseMimeType: "application/json"
-        }
-      });
-
-      res.json(JSON.parse(response.text));
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'ASR failed' });
-    }
-  });
-
   // B2B API Routes (Protected by API Key)
   app.post('/api/v1/translate/text', authenticateApiKey, async (req: any, res) => {
     const { text, targetLang } = req.body;
     if (!deductCredits(req.user.id, 1)) return res.status(402).json({ error: 'Insufficient credits' });
 
     try {
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: `Translate the following text to ${targetLang}:\n\n${text}`,
-      });
-      res.json({ translated: response.text });
+      // MOCK RESPONSE
+      const mockTranslatedText = `[Mocked B2B translation for '${text.substring(0, 20)}...' to ${targetLang}]`;
+      setTimeout(() => {
+        res.json({ translated: mockTranslatedText });
+      }, 1000);
     } catch (e) {
       res.status(500).json({ error: 'Error' });
     }
   });
-
-  // Public/Guest wrappers for the main endpoints
-  // We'll use a separate router or just conditional logic. 
-  // For simplicity, the frontend will call the same endpoints.
-  // If the user is NOT logged in (no token), we treat as guest.
-  // BUT, we need to handle the middleware.
   
-  // Let's make specific guest routes to be clear, or make the middleware optional.
   const optionalAuth = (req: any, res: any, next: any) => {
     const token = req.cookies.token;
     if (!token) {
@@ -266,29 +183,11 @@ async function startServer() {
     });
   };
 
-  // Re-define the routes with optional auth
-  app.post('/api/service/docx', optionalAuth, async (req: any, res, next) => {
-     // We'll reuse the logic from above, but for now let's just route internally or copy logic.
-     // To keep it clean in this single file, I'll just use the handler directly.
-     // See 'Docx Translation Endpoint' above - I'll move the logic to a function if needed, 
-     // but for this prototype, I will just mount the handler here.
-     // Actually, I can just mount the same handler function if I extract it.
-     next();
-  }, (req: any, res: any) => {
-      // This is a bit messy with the inline definition above. 
-      // Let's just rely on the frontend calling the right endpoint.
-      // I will attach the handler to this route.
-      // See below for clean implementation.
-  });
-
 
   // Clean Route Definitions
   const docxHandler = async (req: any, res: any) => {
     const isGuest = !req.user;
     const targetLang = req.body.targetLang || 'English';
-    
-    // Guest Limit: Simple check (in real app, use IP rate limiting or fingerprinting)
-    // For now, guests are unlimited in this demo environment
     
     if (!isGuest) {
       if (!deductCredits(req.user.id, 5)) {
@@ -302,15 +201,17 @@ async function startServer() {
       const result = await mammoth.extractRawText({ buffer: req.file.buffer });
       const text = result.value;
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: `Translate the following text to ${targetLang}. Maintain the original structure as much as possible.\n\n${text}`,
-      });
+      // MOCK RESPONSE
+      const mockTranslatedText = `[This is a mocked translation for the DOCX file into ${targetLang}]\n\nOriginal text started with: "${text.substring(0, 100)}..."`;
 
-      res.json({ 
-        original: text,
-        translated: response.text 
-      });
+      // Simulate network delay
+      setTimeout(() => {
+        res.json({ 
+          original: text,
+          translated: mockTranslatedText 
+        });
+      }, 1500);
+
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Translation failed' });
@@ -330,29 +231,17 @@ async function startServer() {
     if (!req.file) return res.status(400).json({ error: 'No audio uploaded' });
 
     try {
-      const base64Audio = req.file.buffer.toString('base64');
+      // MOCK RESPONSE
+      const mockResponse = {
+        transcription: "This is a mock transcription of the uploaded audio file.",
+        translation: `This is the mocked translation of the transcription into ${targetLang}.`
+      };
       
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash-native-audio-preview-09-2025",
-        contents: {
-          parts: [
-            {
-              inlineData: {
-                mimeType: req.file.mimetype,
-                data: base64Audio
-              }
-            },
-            {
-              text: `Transcribe this audio and then translate it to ${targetLang}. Return the result in JSON format with "transcription" and "translation" fields.`
-            }
-          ]
-        },
-        config: {
-            responseMimeType: "application/json"
-        }
-      });
+      // Simulate network delay
+      setTimeout(() => {
+        res.json(mockResponse);
+      }, 2000);
 
-      res.json(JSON.parse(response.text));
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'ASR failed' });

@@ -12,6 +12,8 @@ export default function Login() {
   const { login, mockLogin } = useAuth();
   const navigate = useNavigate();
 
+  const isMockApi = true;
+
   const handleBypass = () => {
     mockLogin();
     navigate('/dashboard');
@@ -21,6 +23,12 @@ export default function Login() {
     e.preventDefault();
     setError('');
     
+    if (isMockApi) {
+      mockLogin();
+      navigate('/dashboard');
+      return;
+    }
+
     const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
     const body = isLogin ? { email, password } : { email, password, name };
 

@@ -13,6 +13,8 @@ export default function DocxTranslator() {
   const [error, setError] = useState('');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
+  const isMockApi = true;
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
@@ -37,6 +39,21 @@ export default function DocxTranslator() {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('targetLang', targetLang);
+
+    if (isMockApi) {
+      // Simulate API call delay
+      setTimeout(() => {
+        const mockOriginalText = `Mocked original text from ${file.name}. This is a placeholder for the actual content of the DOCX file.`;
+        const mockTranslatedText = `Mocked translated text to ${targetLang}. This is a placeholder for the translated content.`;
+        setResult({
+          original: mockOriginalText,
+          translated: mockTranslatedText,
+        });
+        if (user) refreshUser(); // Simulate credit update
+        setLoading(false);
+      }, 1500); // 1.5 seconds delay
+      return;
+    }
 
     try {
       const res = await fetch('/api/translate/docx', {

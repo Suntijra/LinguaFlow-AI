@@ -17,6 +17,8 @@ export default function AsrTranslator() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
+  const isMockApi = true;
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -75,6 +77,21 @@ export default function AsrTranslator() {
     const formData = new FormData();
     formData.append('audio', audioBlob);
     formData.append('targetLang', targetLang);
+
+    if (isMockApi) {
+      // Simulate API call delay
+      setTimeout(() => {
+        const mockTranscription = "Mocked transcription of the uploaded audio file.";
+        const mockTranslation = `Mocked translation of the transcription into ${targetLang}.`;
+        setResult({
+          transcription: mockTranscription,
+          translation: mockTranslation,
+        });
+        if (user) refreshUser(); // Simulate credit update
+        setLoading(false);
+      }, 2000); // 2 seconds delay
+      return;
+    }
 
     try {
       const res = await fetch('/api/translate/asr', {

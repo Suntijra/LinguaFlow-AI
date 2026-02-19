@@ -7,8 +7,21 @@ export default function TopUp() {
   const { user, refreshUser } = useAuth();
   const [loading, setLoading] = useState(false);
 
+  const isMockApi = true;
+
   const handleTopUp = async (amount: number) => {
     setLoading(true);
+    
+    if (isMockApi) {
+      // Simulate API call delay
+      setTimeout(async () => {
+        await refreshUser(); // Simulate credit update
+        alert(`Mock: Added $${amount} worth of credits successfully!`);
+        setLoading(false);
+      }, 1000); // 1 second delay
+      return;
+    }
+
     try {
       const res = await fetch('/api/credits/topup', {
         method: 'POST',
