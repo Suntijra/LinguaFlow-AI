@@ -9,8 +9,13 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const { login, mockLogin } = useAuth();
   const navigate = useNavigate();
+
+  const handleBypass = () => {
+    mockLogin();
+    navigate('/dashboard');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,6 +110,15 @@ export default function Login() {
             className="text-sm text-indigo-600 hover:underline"
           >
             {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+          </button>
+        </div>
+
+        <div className="mt-4 text-center">
+          <button
+            onClick={handleBypass}
+            className="text-xs text-slate-400 hover:text-slate-600"
+          >
+            Developer Bypass
           </button>
         </div>
       </motion.div>

@@ -12,6 +12,7 @@ interface AuthContextType {
   user: User | null;
   login: (user: User) => void;
   logout: () => void;
+  mockLogin: () => void;
   refreshUser: () => Promise<void>;
   isLoading: boolean;
 }
@@ -46,6 +47,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(userData);
   };
 
+  const mockLogin = () => {
+    const mockUser: User = {
+      id: 999,
+      email: 'dev@linguaflow.ai',
+      name: 'Developer',
+      credits: 1000,
+      api_key: 'mock-api-key-for-dev',
+    };
+    setUser(mockUser);
+  };
+
   const logout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     setUser(null);
@@ -53,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, refreshUser, isLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, mockLogin, refreshUser, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
