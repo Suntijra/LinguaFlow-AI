@@ -1,0 +1,5 @@
+{
+  "name": "LinguaFlow AI",
+  "description": "B2B/B2C AI Translation Platform with Docx and ASR capabilities",
+  "requestFramePermissions": ["microphone"]
+}
