@@ -35,7 +35,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = async () => {
     if (isMockApi) {
-      setUser(mockUser);
+      const isLoggedOut = localStorage.getItem('mockLoggedOut') === 'true';
+      if (isLoggedOut) {
+        setUser(null);
+      } else {
+        setUser(mockUser);
+      }
       setIsLoading(false);
       return;
     }
@@ -63,13 +68,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const mockLogin = () => {
+    localStorage.removeItem('mockLoggedOut');
     setUser(mockUser);
   };
 
   const logout = async () => {
     if (isMockApi) {
+      localStorage.setItem('mockLoggedOut', 'true');
       setUser(null);
-      window.location.href = '/';
       return;
     }
     await fetch('/api/auth/logout', { method: 'POST' });

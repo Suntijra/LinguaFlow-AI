@@ -1,11 +1,13 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { motion } from 'motion/react';
-import { LogOut, Menu, X, Globe } from 'lucide-react';
+import { LogOut, Menu, X, Globe, Languages } from 'lucide-react';
 import React, { useState } from 'react';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -28,13 +30,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               to="/translate/docx" 
               className={`text-sm font-medium transition-colors ${isActive('/translate/docx') ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-900'}`}
             >
-              Docx Translate
+              {t('nav.docxTranslate')}
             </Link>
             <Link 
               to="/translate/asr" 
               className={`text-sm font-medium transition-colors ${isActive('/translate/asr') ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-900'}`}
             >
-              Voice Translate
+              {t('nav.voiceTranslate')}
             </Link>
             {user && (
               <>
@@ -42,19 +44,26 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   to="/topup" 
                   className={`text-sm font-medium transition-colors ${isActive('/topup') ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-900'}`}
                 >
-                  Credits: {user.credits}
+                  {t('nav.credits')} {user.credits}
                 </Link>
                 <Link 
                   to="/sandbox" 
                   className={`text-sm font-medium transition-colors ${isActive('/sandbox') ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-900'}`}
                 >
-                  Developer API
+                  {t('nav.developerApi')}
                 </Link>
               </>
             )}
           </div>
 
           <div className="hidden md:flex items-center gap-4">
+            <button
+              onClick={() => setLanguage(language === 'en' ? 'th' : 'en')}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors text-sm font-medium"
+            >
+              <Languages size={16} />
+              {language.toUpperCase()}
+            </button>
             {user ? (
               <div className="flex items-center gap-4">
                 <span className="text-sm font-medium text-slate-900">{user.name || user.email}</span>
@@ -70,7 +79,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 to="/login" 
                 className="px-5 py-2 bg-slate-900 text-white rounded-full text-sm font-medium hover:bg-slate-800 transition-colors"
               >
-                Sign In
+                {t('nav.signIn')}
               </Link>
             )}
           </div>
@@ -92,17 +101,25 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             className="md:hidden bg-white border-b border-slate-200 overflow-hidden"
           >
             <div className="px-6 py-4 space-y-4 flex flex-col">
-              <Link to="/translate/docx" onClick={() => setIsMenuOpen(false)}>Docx Translate</Link>
-              <Link to="/translate/asr" onClick={() => setIsMenuOpen(false)}>Voice Translate</Link>
+              <button
+                onClick={() => setLanguage(language === 'en' ? 'th' : 'en')}
+                className="flex items-center gap-2 text-slate-600 font-medium w-full text-left"
+              >
+                <Languages size={18} />
+                Switch to {language === 'en' ? 'Thai' : 'English'}
+              </button>
+              <div className="h-px bg-slate-100 my-2" />
+              <Link to="/translate/docx" onClick={() => setIsMenuOpen(false)}>{t('nav.docxTranslate')}</Link>
+              <Link to="/translate/asr" onClick={() => setIsMenuOpen(false)}>{t('nav.voiceTranslate')}</Link>
               {user && (
                 <>
-                  <Link to="/topup" onClick={() => setIsMenuOpen(false)}>Credits: {user.credits}</Link>
-                  <Link to="/sandbox" onClick={() => setIsMenuOpen(false)}>Developer API</Link>
-                  <button onClick={logout} className="text-left text-red-500">Logout</button>
+                  <Link to="/topup" onClick={() => setIsMenuOpen(false)}>{t('nav.credits')} {user.credits}</Link>
+                  <Link to="/sandbox" onClick={() => setIsMenuOpen(false)}>{t('nav.developerApi')}</Link>
+                  <button onClick={logout} className="text-left text-red-500">{t('nav.logout')}</button>
                 </>
               )}
               {!user && (
-                <Link to="/login" onClick={() => setIsMenuOpen(false)} className="text-indigo-600 font-medium">Sign In</Link>
+                <Link to="/login" onClick={() => setIsMenuOpen(false)} className="text-indigo-600 font-medium">{t('nav.signIn')}</Link>
               )}
             </div>
           </motion.div>

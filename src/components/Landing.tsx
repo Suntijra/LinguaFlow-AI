@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { ArrowRight, Globe, Mic, Zap } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function Landing() {
+  const { t } = useLanguage();
+
   return (
     <div className="space-y-24 pb-24">
       {/* Hero */}
@@ -12,8 +15,7 @@ export default function Landing() {
           animate={{ opacity: 1, y: 0 }}
           className="text-5xl md:text-7xl font-bold text-slate-900 tracking-tight mb-6"
         >
-          Translate the World <br />
-          <span className="text-indigo-600">Instantly.</span>
+          {t('landing.title')}
         </motion.h1>
         <motion.p 
           initial={{ opacity: 0, y: 20 }}
@@ -21,8 +23,7 @@ export default function Landing() {
           transition={{ delay: 0.1 }}
           className="text-xl text-slate-500 max-w-2xl mx-auto mb-10"
         >
-          Professional AI-powered translation for documents and voice. 
-          Seamless B2B integration and B2C simplicity.
+          {t('landing.subtitle')}
         </motion.p>
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
